@@ -1,0 +1,35 @@
+{
+	"name": "Trigger_Incremental_Copy1",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "Incremental_Copy1",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"windowStart": {
+						"type": "Expression",
+						"value": "@{addminutes(trigger().scheduledTime, -1)}"
+					},
+					"windowEnd": {
+						"type": "Expression",
+						"value": "@trigger().scheduledTime"
+					}
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 1,
+				"startTime": "2023-06-29T16:11:00Z",
+				"endTime": "2023-06-30T16:11:00Z",
+				"timeZone": "UTC"
+			}
+		}
+	}
+}
