@@ -62,6 +62,24 @@
 					},
 					"SqlServer_local_linkedService_connectionString": {
 						"value": "[parameters('SqlServer_local_linkedService_connectionString')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "prac-data-factory_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
 					},
 					"Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowStart": {
 						"value": "[parameters('Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowStart')]"
@@ -71,7 +89,9 @@
 					}
 				}
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'prac-data-factory_ArmTemplate_0')]"
+			]
 		}
 	]
 }
