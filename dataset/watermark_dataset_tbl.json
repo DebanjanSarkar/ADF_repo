@@ -1,5 +1,5 @@
 {
-	"name": "watermark_dataset",
+	"name": "watermark_dataset_tbl",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "SqlServer_local_linkedService",

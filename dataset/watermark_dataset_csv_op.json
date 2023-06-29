@@ -1,0 +1,26 @@
+{
+	"name": "watermark_dataset_csv_op",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage_linkedServ",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Incremental_Load_datasets/Incremental_Copy2_watermark_datasets"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "watermark",
+				"container": "con1"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
