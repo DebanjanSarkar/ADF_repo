@@ -25,6 +25,19 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage_linkedServ')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureBlobStorage_linkedServ_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/integrationRuntime-selfHosted')]",
 			"type": "Microsoft.DataFactory/factories/integrationRuntimes",
 			"apiVersion": "2018-06-01",
@@ -36,22 +49,161 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage_linkedServ')]",
-			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"name": "[concat(parameters('factoryName'), '/SAAC_file_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"annotations": [],
-				"type": "AzureBlobStorage",
-				"typeProperties": {
-					"connectionString": "[parameters('AzureBlobStorage_linkedServ_connectionString')]"
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage_linkedServ",
+					"type": "LinkedServiceReference"
 				},
-				"connectVia": {
-					"referenceName": "integrationRuntime-selfHosted",
-					"type": "IntegrationRuntimeReference"
+				"folder": {
+					"name": "new_task"
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "SAAC.txt",
+						"folderPath": "inp",
+						"container": "con1"
+					}
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/integrationRuntimes/integrationRuntime-selfHosted')]"
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/op_dataset_avro')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage_linkedServ",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderName_AvroOpDataset": {
+						"type": "string"
+					},
+					"fileName_AvroOpDataset": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ADF100_datasets/1-copy_data_pipeline_datasets"
+				},
+				"annotations": [],
+				"type": "Avro",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().fileName_AvroOpDataset",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderName_AvroOpDataset",
+							"type": "Expression"
+						},
+						"container": "con1"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/op_dataset_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage_linkedServ",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderName_inCSVOutputDataset": {
+						"type": "String"
+					},
+					"fileName_inCSVOutputDataset": {
+						"type": "String"
+					}
+				},
+				"folder": {
+					"name": "ADF100_datasets/1-copy_data_pipeline_datasets"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().fileName_inCSVOutputDataset",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderName_inCSVOutputDataset",
+							"type": "Expression"
+						},
+						"container": "con1"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/op_dataset_parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage_linkedServ",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folderName_parquetOpDataset": {
+						"type": "string"
+					},
+					"fileName_parquetOpDataset": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ADF100_datasets/1-copy_data_pipeline_datasets"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@dataset().fileName_parquetOpDataset",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().folderName_parquetOpDataset",
+							"type": "Expression"
+						},
+						"container": "con1"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
 			]
 		},
 		{
@@ -104,6 +256,61 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/integrationRuntime-selfHosted')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/task_pipeline_1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "GetInfoaboutSAACFile",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "SAAC_file_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"exists",
+								"itemName",
+								"itemType",
+								"lastModified",
+								"size"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "BinaryReadSettings"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "new_task_pipeline_folder"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/SAAC_file_dataset')]"
 			]
 		},
 		{
@@ -281,137 +488,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/op_dataset_avro')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureBlobStorage_linkedServ",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderName_AvroOpDataset": {
-						"type": "string"
-					},
-					"fileName_AvroOpDataset": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "ADF100_datasets/1-copy_data_pipeline_datasets"
-				},
-				"annotations": [],
-				"type": "Avro",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": {
-							"value": "@dataset().fileName_AvroOpDataset",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderName_AvroOpDataset",
-							"type": "Expression"
-						},
-						"container": "con1"
-					}
-				},
-				"schema": {}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/op_dataset_csv')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureBlobStorage_linkedServ",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderName_inCSVOutputDataset": {
-						"type": "String"
-					},
-					"fileName_inCSVOutputDataset": {
-						"type": "String"
-					}
-				},
-				"folder": {
-					"name": "ADF100_datasets/1-copy_data_pipeline_datasets"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": {
-							"value": "@dataset().fileName_inCSVOutputDataset",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderName_inCSVOutputDataset",
-							"type": "Expression"
-						},
-						"container": "con1"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/op_dataset_parquet')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureBlobStorage_linkedServ",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folderName_parquetOpDataset": {
-						"type": "string"
-					},
-					"fileName_parquetOpDataset": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "ADF100_datasets/1-copy_data_pipeline_datasets"
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": {
-							"value": "@dataset().fileName_parquetOpDataset",
-							"type": "Expression"
-						},
-						"folderPath": {
-							"value": "@dataset().folderName_parquetOpDataset",
-							"type": "Expression"
-						},
-						"container": "con1"
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
 			]
 		},
 		{
