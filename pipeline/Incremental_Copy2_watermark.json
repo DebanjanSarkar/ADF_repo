@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Lookup1",
+				"name": "tblWaterMark_lookup",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -13,9 +13,92 @@
 					"secureOutput": false,
 					"secureInput": false
 				},
-				"userProperties": []
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "watermark_dataset_tbl",
+						"type": "DatasetReference",
+						"parameters": {
+							"schemaName_inDataset": {
+								"value": "@pipeline().parameters.schemaName",
+								"type": "Expression"
+							},
+							"tableName_inDataset": {
+								"value": "@pipeline().parameters.waterMarktableName",
+								"type": "Expression"
+							},
+							"dbName_inDataset": {
+								"value": "@pipeline().parameters.dbName",
+								"type": "Expression"
+							}
+						}
+					}
+				}
+			},
+			{
+				"name": "FILE_SOURCE_lookup",
+				"description": "Gets the maximum lastmodifytime.",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": "SELECT MAX(lastmodifytime) AS max_date FROM increment.FILE_SOURCE;",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "watermark_dataset_tbl",
+						"type": "DatasetReference",
+						"parameters": {
+							"schemaName_inDataset": {
+								"value": "@pipeline().parameters.schemaName",
+								"type": "Expression"
+							},
+							"tableName_inDataset": {
+								"value": "@pipeline().parameters.mainTableName",
+								"type": "Expression"
+							},
+							"dbName_inDataset": {
+								"value": "@pipeline().parameters.dbName",
+								"type": "Expression"
+							}
+						}
+					}
+				}
 			}
 		],
+		"parameters": {
+			"dbName": {
+				"type": "string",
+				"defaultValue": "azureDB"
+			},
+			"schemaName": {
+				"type": "string",
+				"defaultValue": "increment"
+			},
+			"waterMarktableName": {
+				"type": "string",
+				"defaultValue": "tblWaterMark"
+			},
+			"mainTableName": {
+				"type": "string",
+				"defaultValue": "FILE_SOURCE"
+			}
+		},
 		"folder": {
 			"name": "Incremental_Load"
 		},
