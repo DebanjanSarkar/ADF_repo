@@ -1,0 +1,22 @@
+{
+	"name": "SAAC_file_dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage_linkedServ",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "new_task"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "SAAC.txt",
+				"folderPath": "inp",
+				"container": "con1"
+			}
+		}
+	}
+}
