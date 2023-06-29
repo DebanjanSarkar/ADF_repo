@@ -4,7 +4,7 @@
 		"description": "Copy data activity using Copy Data Tool",
 		"activities": [
 			{
-				"name": "Copy_mkx",
+				"name": "Incremental_Copy_Activity",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
