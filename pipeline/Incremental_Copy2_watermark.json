@@ -1,0 +1,9 @@
+{
+	"name": "Incremental_Copy2_watermark",
+	"properties": {
+		"folder": {
+			"name": "Incremental_Load"
+		},
+		"annotations": []
+	}
+}

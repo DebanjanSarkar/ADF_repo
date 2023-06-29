@@ -1,0 +1,44 @@
+{
+	"name": "watermark_dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SqlServer_local_linkedService",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"linkedServicedbName": {
+					"value": "@dataset().dbName_inDataset",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"schemaName_inDataset": {
+				"type": "string",
+				"defaultValue": "increment"
+			},
+			"tableName_inDataset": {
+				"type": "string"
+			},
+			"dbName_inDataset": {
+				"type": "string",
+				"defaultValue": "azureDB"
+			}
+		},
+		"folder": {
+			"name": "Incremental_Load_datasets/Incremental_Copy2_watermark_datasets"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().schemaName_inDataset",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().tableName_inDataset",
+				"type": "Expression"
+			}
+		}
+	}
+}
