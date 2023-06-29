@@ -1,0 +1,18 @@
+{
+	"name": "DestinationDataset_Incremental_Copy1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage_linkedServ",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "out",
+				"container": "con1"
+			}
+		}
+	}
+}
