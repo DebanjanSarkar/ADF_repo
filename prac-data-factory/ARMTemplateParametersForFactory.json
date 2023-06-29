@@ -13,6 +13,12 @@
 		},
 		"SqlServer_local_linkedService_connectionString": {
 			"value": ""
+		},
+		"Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowStart": {
+			"value": "@{addminutes(trigger().scheduledTime, -1)}"
+		},
+		"Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowEnd": {
+			"value": "@trigger().scheduledTime"
 		}
 	}
 }
