@@ -110,7 +110,7 @@
 					"source": {
 						"type": "SqlServerSource",
 						"sqlReaderQuery": {
-							"value": "@SELECT * FROM increment.FILE_SOURCE WHERE\nlastmodifytime > 'activity('tblWaterMark_lookup').output.firstRow.WatermarkValue'\nAND\nlastmodifytime <= 'activity('FILE_SOURCE_lookup').output.firstRow.max_date';",
+							"value": "SELECT * FROM increment.FILE_SOURCE WHERE\nlastmodifytime > '@{activity('tblWaterMark_lookup').output.firstRow.WatermarkValue}'\nAND\nlastmodifytime <= '@{activity('FILE_SOURCE_lookup').output.firstRow.max_date}';",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00",
