@@ -10,7 +10,6 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": "*.txt",
 				"folderPath": "inp",
 				"container": "con1"
 			}

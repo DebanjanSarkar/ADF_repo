@@ -37,7 +37,10 @@
 							"modifiedDatetimeEnd": {
 								"value": "@pipeline().parameters.windowEnd",
 								"type": "Expression"
-							}
+							},
+							"wildcardFolderPath": "inp",
+							"wildcardFileName": "*.txt",
+							"deleteFilesAfterCompletion": false
 						},
 						"formatSettings": {
 							"type": "BinaryReadSettings"
