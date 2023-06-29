@@ -1,0 +1,19 @@
+{
+	"name": "SourceDataset_Incremental_Copy1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage_linkedServ",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Binary",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "*.txt",
+				"folderPath": "inp",
+				"container": "con1"
+			}
+		}
+	}
+}
