@@ -1,0 +1,7 @@
+{
+	"name": "integrationRuntime-selfHosted",
+	"properties": {
+		"type": "SelfHosted",
+		"description": "This integration runtime is configured to execute workloads using my own PC resources."
+	}
+}

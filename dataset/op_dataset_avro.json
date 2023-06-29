@@ -1,0 +1,38 @@
+{
+	"name": "op_dataset_avro",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage_linkedServ",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"folderName_AvroOpDataset": {
+				"type": "string"
+			},
+			"fileName_AvroOpDataset": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ADF100_datasets/1-copy_data_pipeline_datasets"
+		},
+		"annotations": [],
+		"type": "Avro",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().fileName_AvroOpDataset",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().folderName_AvroOpDataset",
+					"type": "Expression"
+				},
+				"container": "con1"
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

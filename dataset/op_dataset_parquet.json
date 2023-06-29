@@ -1,0 +1,39 @@
+{
+	"name": "op_dataset_parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage_linkedServ",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"folderName_parquetOpDataset": {
+				"type": "string"
+			},
+			"fileName_parquetOpDataset": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ADF100_datasets/1-copy_data_pipeline_datasets"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().fileName_parquetOpDataset",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().folderName_parquetOpDataset",
+					"type": "Expression"
+				},
+				"container": "con1"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

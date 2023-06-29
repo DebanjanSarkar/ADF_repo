@@ -1,0 +1,9 @@
+{
+	"name": "prac-data-factory",
+	"location": "centralindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "51ab3edf-6cd4-48f7-a690-40dd7a3da3cf",
+		"tenantId": "78ccf8da-36a5-4d83-aa39-07d773288411"
+	}
+}

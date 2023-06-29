@@ -1,0 +1,44 @@
+{
+	"name": "SqlServerLocal_dataset_101_1",
+	"properties": {
+		"description": "Dataset that connects to local SQL Server of DEBANJAN, and is used in ADF101 pipeline 1",
+		"linkedServiceName": {
+			"referenceName": "SqlServer_local_linkedService",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"linkedServicedbName": {
+					"value": "@dataset().dbName_odDataset",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"dbName_odDataset": {
+				"type": "string"
+			},
+			"schemaName_ofDataset": {
+				"type": "string"
+			},
+			"tableName_ofDataset": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ADF101_datasets/1-load_data_from_localserver_to_azureDB_pipeline_datasets"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().schemaName_ofDataset",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().tableName_ofDataset",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,156 @@
+{
+	"name": "2-copy_all_tables_DB_to_DB_pipeline",
+	"properties": {
+		"description": "This pipeline copies all the table from one database to another database.",
+		"activities": [
+			{
+				"name": "GetAllTheTableNamesInDatabase",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": "SELECT TABLE_SCHEMA, TABLE_NAME FROM INFORMATION_SCHEMA.TABLES\nWHERE TABLE_TYPE='Base Table';",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "SqlServerDataset_local_2",
+						"type": "DatasetReference",
+						"parameters": {
+							"dbName_dataset": {
+								"value": "@pipeline().parameters.fromDatabase",
+								"type": "Expression"
+							},
+							"schemaName_dataset": "dbo",
+							"tableName_dataset": "tblProducts"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachtoLoopthroughAllTables",
+				"description": "This loop will take the array of table schemas and names from the lookup activity, and will do the copy activity one by one",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "GetAllTheTableNamesInDatabase",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('GetAllTheTableNamesInDatabase').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copy all tables from one database to another",
+							"description": "This activity will take the names of schema.table from forEach item one by one, and will copy it from one database to another. The database names can be set in the pipeline parameters.",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "SqlServerSink",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"tableOption": "autoCreate"
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "SqlServerDataset_local_2",
+									"type": "DatasetReference",
+									"parameters": {
+										"dbName_dataset": {
+											"value": "@pipeline().parameters.fromDatabase",
+											"type": "Expression"
+										},
+										"schemaName_dataset": {
+											"value": "@item().TABLE_SCHEMA",
+											"type": "Expression"
+										},
+										"tableName_dataset": {
+											"value": "@item().TABLE_NAME",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "SqlServerDataset_local_2",
+									"type": "DatasetReference",
+									"parameters": {
+										"dbName_dataset": {
+											"value": "@pipeline().parameters.toDatabase",
+											"type": "Expression"
+										},
+										"schemaName_dataset": {
+											"value": "@item().TABLE_SCHEMA",
+											"type": "Expression"
+										},
+										"tableName_dataset": {
+											"value": "@item().TABLE_NAME",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"fromDatabase": {
+				"type": "string",
+				"defaultValue": "test_db"
+			},
+			"toDatabase": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ADF100"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-06-23T11:43:47Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

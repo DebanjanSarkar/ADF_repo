@@ -1,0 +1,23 @@
+{
+	"name": "AzureSqlServer_linkedServ",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "This is a connector to the Azure Sql Server resource created by me on my Azure student account.",
+		"parameters": {
+			"dbName_linkedServ": {
+				"type": "string",
+				"defaultValue": "pracDB"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "integrated security=False;encrypt=True;connection timeout=30;data source=sql-server-debanjan.database.windows.net;initial catalog=@{linkedService().dbName_linkedServ};user id=sysAdmin",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiIwODk3Y2UzNS1iNWNhLTRmNzQtYjZlNi1iNmRlZTVkMjI5ZmEiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "integrationRuntime-selfHosted",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

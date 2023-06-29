@@ -1,0 +1,42 @@
+{
+	"name": "op_dataset_csv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage_linkedServ",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"folderName_inCSVOutputDataset": {
+				"type": "String"
+			},
+			"fileName_inCSVOutputDataset": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "ADF100_datasets/1-copy_data_pipeline_datasets"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": {
+					"value": "@dataset().fileName_inCSVOutputDataset",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().folderName_inCSVOutputDataset",
+					"type": "Expression"
+				},
+				"container": "con1"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

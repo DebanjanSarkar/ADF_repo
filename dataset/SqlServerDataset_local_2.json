@@ -1,0 +1,43 @@
+{
+	"name": "SqlServerDataset_local_2",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SqlServer_local_linkedService",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"linkedServicedbName": {
+					"value": "@dataset().dbName_dataset",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"dbName_dataset": {
+				"type": "string"
+			},
+			"schemaName_dataset": {
+				"type": "string"
+			},
+			"tableName_dataset": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ADF100_datasets/2-copy_all_tables_DB_to_DB_pipeline_datasets"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().schemaName_dataset",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().tableName_dataset",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

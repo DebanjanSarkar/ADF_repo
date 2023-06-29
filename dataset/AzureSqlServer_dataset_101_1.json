@@ -1,0 +1,43 @@
+{
+	"name": "AzureSqlServer_dataset_101_1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlServer_linkedServ",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"dbName_linkedServ": {
+					"value": "@dataset().dbName_ofDataset",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"dbName_ofDataset": {
+				"type": "string"
+			},
+			"schemaName_ofDataset": {
+				"type": "string"
+			},
+			"tableName_ofDataset": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ADF101_datasets/1-load_data_from_localserver_to_azureDB_pipeline_datasets"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().schemaName_ofDataset",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().tableName_ofDataset",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

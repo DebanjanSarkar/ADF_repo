@@ -1,0 +1,31 @@
+{
+	"name": "ip_dataset_sqlserver",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SqlServer_local_linkedService",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"linkedServicedbName": {
+					"value": "@dataset().dbNameDataset",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"dbNameDataset": {
+				"type": "string"
+			}
+		},
+		"folder": {
+			"name": "ADF100_datasets/1-copy_data_pipeline_datasets"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "tblProducts"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
