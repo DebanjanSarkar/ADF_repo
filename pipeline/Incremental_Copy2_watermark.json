@@ -79,6 +79,90 @@
 						}
 					}
 				}
+			},
+			{
+				"name": "Copy_Latest_data_to_blob",
+				"description": "This activity will copy the updated data to azure blob storage in CSV format.",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "tblWaterMark_lookup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "FILE_SOURCE_lookup",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": {
+							"value": "@SELECT * FROM increment.FILE_SOURCE WHERE\nlastmodifytime > 'activity('tblWaterMark_lookup').output.firstRow.WatermarkValue'\nAND\nlastmodifytime <= 'activity('FILE_SOURCE_lookup').output.firstRow.max_date';",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"sink": {
+						"type": "DelimitedTextSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings"
+						},
+						"formatSettings": {
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".csv"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "watermark_dataset_tbl",
+						"type": "DatasetReference",
+						"parameters": {
+							"schemaName_inDataset": {
+								"value": "@pipeline().parameters.schemaName",
+								"type": "Expression"
+							},
+							"tableName_inDataset": {
+								"value": "@pipeline().parameters.mainTableName",
+								"type": "Expression"
+							},
+							"dbName_inDataset": {
+								"value": "@pipeline().parameters.dbName",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "watermark_dataset_csv_op",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
 		"parameters": {
