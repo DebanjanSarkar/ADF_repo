@@ -5,6 +5,9 @@
 			"referenceName": "AzureBlobStorage_linkedServ",
 			"type": "LinkedServiceReference"
 		},
+		"folder": {
+			"name": "Incremental_Load_datasets/Incremental_Copy1_datasets"
+		},
 		"annotations": [],
 		"type": "Binary",
 		"typeProperties": {
