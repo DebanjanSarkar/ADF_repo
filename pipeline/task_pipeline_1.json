@@ -1,0 +1,44 @@
+{
+	"name": "task_pipeline_1",
+	"properties": {
+		"activities": [
+			{
+				"name": "GetInfoaboutSAACFile",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "SAAC_file_dataset",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"exists",
+						"itemName",
+						"itemType",
+						"lastModified",
+						"size"
+					],
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "BinaryReadSettings"
+					}
+				}
+			}
+		],
+		"folder": {
+			"name": "new_task_pipeline_folder"
+		},
+		"annotations": []
+	}
+}
