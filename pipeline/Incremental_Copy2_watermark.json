@@ -163,6 +163,56 @@
 						"type": "DatasetReference"
 					}
 				]
+			},
+			{
+				"name": "StoredProcedure_updateWatermarkTbl",
+				"description": "This stored procedure updates the value in the water mark table, which will make the next incremental copy valid for next updates.",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Copy_Latest_data_to_blob",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[spUpdateWatermarkTbl]",
+					"storedProcedureParameters": {
+						"lastmodifytime": {
+							"value": {
+								"value": "@activity('FILE_SOURCE_lookup').output.firstRow.max_date",
+								"type": "Expression"
+							},
+							"type": "DateTime"
+						},
+						"Tablename": {
+							"value": {
+								"value": "@activity('tblWaterMark_lookup').output.firstRow.TableName",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "SqlServer_local_linkedService",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"linkedServicedbName": {
+							"value": "@pipeline().parameters.dbName",
+							"type": "Expression"
+						}
+					}
+				}
 			}
 		],
 		"parameters": {
