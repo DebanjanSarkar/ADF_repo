@@ -1688,7 +1688,7 @@
 												"dbName_dataset": "sample6",
 												"schemaName_dataset": "dbo",
 												"tableName_dataset": {
-													"value": "@pipeline().parameters.destTableName",
+													"value": "@item().Destination_tbl_name",
 													"type": "Expression"
 												}
 											}
@@ -1749,9 +1749,6 @@
 					"dbName": {
 						"type": "string",
 						"defaultValue": "sample6"
-					},
-					"destTableName": {
-						"type": "string"
 					}
 				},
 				"folder": {
