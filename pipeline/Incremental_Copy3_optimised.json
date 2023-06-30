@@ -52,7 +52,115 @@
 						"value": "@activity('Lookup_LookupTable').output.value",
 						"type": "Expression"
 					},
-					"isSequential": true
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Copy data1",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"sqlReaderQuery": {
+										"value": "SELECT * FROM @{item().Source_tbl_name}\nWHERE @{item().Datecolumn_name} > '@{item().Lastmodified_date}';",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "SqlServerSink",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"tableOption": "autoCreate"
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "incremen_cpy_optimised_sqlserverTbl_dataset",
+									"type": "DatasetReference",
+									"parameters": {
+										"dbName_dataset": "sample6",
+										"schemaName_dataset": "dbo",
+										"tableName_dataset": "Employee"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "incremen_cpy_optimised_sqlserverTbl_dataset",
+									"type": "DatasetReference",
+									"parameters": {
+										"dbName_dataset": "sample6",
+										"schemaName_dataset": "dbo",
+										"tableName_dataset": {
+											"value": "@pipeline().parameters.destTableName",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "SP_updateLookupTable",
+							"type": "SqlServerStoredProcedure",
+							"dependsOn": [
+								{
+									"activity": "Copy data1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"storedProcedureName": "[dbo].[spUpdateLookupTable]",
+								"storedProcedureParameters": {
+									"tableName": {
+										"value": {
+											"value": "@item().Destination_tbl_name",
+											"type": "Expression"
+										},
+										"type": "String"
+									}
+								}
+							},
+							"linkedServiceName": {
+								"referenceName": "SqlServer_local_linkedService",
+								"type": "LinkedServiceReference",
+								"parameters": {
+									"linkedServicedbName": {
+										"value": "@pipeline().parameters.dbName",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
 				}
 			}
 		],
@@ -60,6 +168,9 @@
 			"dbName": {
 				"type": "string",
 				"defaultValue": "sample6"
+			},
+			"destTableName": {
+				"type": "string"
 			}
 		},
 		"folder": {
