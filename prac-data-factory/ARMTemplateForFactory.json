@@ -679,6 +679,259 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Incremental_Copy2_watermark')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "tblWaterMark_lookup",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "watermark_dataset_tbl",
+								"type": "DatasetReference",
+								"parameters": {
+									"schemaName_inDataset": {
+										"value": "@pipeline().parameters.schemaName",
+										"type": "Expression"
+									},
+									"tableName_inDataset": {
+										"value": "@pipeline().parameters.waterMarktableName",
+										"type": "Expression"
+									},
+									"dbName_inDataset": {
+										"value": "@pipeline().parameters.dbName",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					{
+						"name": "FILE_SOURCE_lookup",
+						"description": "Gets the maximum lastmodifytime.",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": "SELECT MAX(lastmodifytime) AS max_date FROM increment.FILE_SOURCE;",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "watermark_dataset_tbl",
+								"type": "DatasetReference",
+								"parameters": {
+									"schemaName_inDataset": {
+										"value": "@pipeline().parameters.schemaName",
+										"type": "Expression"
+									},
+									"tableName_inDataset": {
+										"value": "@pipeline().parameters.mainTableName",
+										"type": "Expression"
+									},
+									"dbName_inDataset": {
+										"value": "@pipeline().parameters.dbName",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					},
+					{
+						"name": "Copy_Latest_data_to_blob",
+						"description": "This activity will copy the updated data to azure blob storage in CSV format.",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "tblWaterMark_lookup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "FILE_SOURCE_lookup",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": {
+									"value": "SELECT * FROM increment.FILE_SOURCE WHERE\nlastmodifytime > '@{activity('tblWaterMark_lookup').output.firstRow.WatermarkValue}'\nAND\nlastmodifytime <= '@{activity('FILE_SOURCE_lookup').output.firstRow.max_date}';",
+									"type": "Expression"
+								},
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".csv"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "watermark_dataset_tbl",
+								"type": "DatasetReference",
+								"parameters": {
+									"schemaName_inDataset": {
+										"value": "@pipeline().parameters.schemaName",
+										"type": "Expression"
+									},
+									"tableName_inDataset": {
+										"value": "@pipeline().parameters.mainTableName",
+										"type": "Expression"
+									},
+									"dbName_inDataset": {
+										"value": "@pipeline().parameters.dbName",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "watermark_dataset_csv_op",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "StoredProcedure_updateWatermarkTbl",
+						"description": "This stored procedure updates the value in the water mark table, which will make the next incremental copy valid for next updates.",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Copy_Latest_data_to_blob",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[dbo].[spUpdateWatermarkTbl]",
+							"storedProcedureParameters": {
+								"lastmodifytime": {
+									"value": {
+										"value": "@activity('FILE_SOURCE_lookup').output.firstRow.max_date",
+										"type": "Expression"
+									},
+									"type": "DateTime"
+								},
+								"Tablename": {
+									"value": {
+										"value": "@activity('tblWaterMark_lookup').output.firstRow.TableName",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "SqlServer_local_linkedService",
+							"type": "LinkedServiceReference",
+							"parameters": {
+								"linkedServicedbName": {
+									"value": "@pipeline().parameters.dbName",
+									"type": "Expression"
+								}
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"dbName": {
+						"type": "string",
+						"defaultValue": "azureDB"
+					},
+					"schemaName": {
+						"type": "string",
+						"defaultValue": "increment"
+					},
+					"waterMarktableName": {
+						"type": "string",
+						"defaultValue": "tblWaterMark"
+					},
+					"mainTableName": {
+						"type": "string",
+						"defaultValue": "FILE_SOURCE"
+					}
+				},
+				"folder": {
+					"name": "Incremental_Load"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/watermark_dataset_tbl')]",
+				"[concat(variables('factoryId'), '/datasets/watermark_dataset_csv_op')]",
+				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/task_pipeline_1')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1121,6 +1374,90 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/watermark_dataset_csv_op')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage_linkedServ",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Incremental_Load_datasets/Incremental_Copy2_watermark_datasets"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@utcnow()",
+							"type": "Expression"
+						},
+						"folderPath": "watermark",
+						"container": "con1"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/watermark_dataset_tbl')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SqlServer_local_linkedService",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"linkedServicedbName": {
+							"value": "@dataset().dbName_inDataset",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"schemaName_inDataset": {
+						"type": "string",
+						"defaultValue": "increment"
+					},
+					"tableName_inDataset": {
+						"type": "string"
+					},
+					"dbName_inDataset": {
+						"type": "string",
+						"defaultValue": "azureDB"
+					}
+				},
+				"folder": {
+					"name": "Incremental_Load_datasets/Incremental_Copy2_watermark_datasets"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().schemaName_inDataset",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().tableName_inDataset",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/AzureBlobStorage_linkedServ')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -1235,292 +1572,6 @@
 				"typeProperties": {}
 			},
 			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Incremental_Copy2_watermark')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "tblWaterMark_lookup",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "watermark_dataset_tbl",
-								"type": "DatasetReference",
-								"parameters": {
-									"schemaName_inDataset": {
-										"value": "@pipeline().parameters.schemaName",
-										"type": "Expression"
-									},
-									"tableName_inDataset": {
-										"value": "@pipeline().parameters.waterMarktableName",
-										"type": "Expression"
-									},
-									"dbName_inDataset": {
-										"value": "@pipeline().parameters.dbName",
-										"type": "Expression"
-									}
-								}
-							}
-						}
-					},
-					{
-						"name": "FILE_SOURCE_lookup",
-						"description": "Gets the maximum lastmodifytime.",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"sqlReaderQuery": "SELECT MAX(lastmodifytime) AS max_date FROM increment.FILE_SOURCE;",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "watermark_dataset_tbl",
-								"type": "DatasetReference",
-								"parameters": {
-									"schemaName_inDataset": {
-										"value": "@pipeline().parameters.schemaName",
-										"type": "Expression"
-									},
-									"tableName_inDataset": {
-										"value": "@pipeline().parameters.mainTableName",
-										"type": "Expression"
-									},
-									"dbName_inDataset": {
-										"value": "@pipeline().parameters.dbName",
-										"type": "Expression"
-									}
-								}
-							}
-						}
-					},
-					{
-						"name": "Copy_Latest_data_to_blob",
-						"description": "This activity will copy the updated data to azure blob storage in CSV format.",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "tblWaterMark_lookup",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							},
-							{
-								"activity": "FILE_SOURCE_lookup",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"sqlReaderQuery": {
-									"value": "SELECT * FROM increment.FILE_SOURCE WHERE\nlastmodifytime > '@{activity('tblWaterMark_lookup').output.firstRow.WatermarkValue}'\nAND\nlastmodifytime <= '@{activity('FILE_SOURCE_lookup').output.firstRow.max_date}';",
-									"type": "Expression"
-								},
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobStorageWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".csv"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "watermark_dataset_tbl",
-								"type": "DatasetReference",
-								"parameters": {
-									"schemaName_inDataset": {
-										"value": "@pipeline().parameters.schemaName",
-										"type": "Expression"
-									},
-									"tableName_inDataset": {
-										"value": "@pipeline().parameters.mainTableName",
-										"type": "Expression"
-									},
-									"dbName_inDataset": {
-										"value": "@pipeline().parameters.dbName",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "watermark_dataset_csv_op",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"parameters": {
-					"dbName": {
-						"type": "string",
-						"defaultValue": "azureDB"
-					},
-					"schemaName": {
-						"type": "string",
-						"defaultValue": "increment"
-					},
-					"waterMarktableName": {
-						"type": "string",
-						"defaultValue": "tblWaterMark"
-					},
-					"mainTableName": {
-						"type": "string",
-						"defaultValue": "FILE_SOURCE"
-					}
-				},
-				"folder": {
-					"name": "Incremental_Load"
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/watermark_dataset_tbl')]",
-				"[concat(variables('factoryId'), '/datasets/watermark_dataset_csv_op')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/watermark_dataset_tbl')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "SqlServer_local_linkedService",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"linkedServicedbName": {
-							"value": "@dataset().dbName_inDataset",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"schemaName_inDataset": {
-						"type": "string",
-						"defaultValue": "increment"
-					},
-					"tableName_inDataset": {
-						"type": "string"
-					},
-					"dbName_inDataset": {
-						"type": "string",
-						"defaultValue": "azureDB"
-					}
-				},
-				"folder": {
-					"name": "Incremental_Load_datasets/Incremental_Copy2_watermark_datasets"
-				},
-				"annotations": [],
-				"type": "SqlServerTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().schemaName_inDataset",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().tableName_inDataset",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/watermark_dataset_csv_op')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureBlobStorage_linkedServ",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Incremental_Load_datasets/Incremental_Copy2_watermark_datasets"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": {
-							"value": "@utcnow()",
-							"type": "Expression"
-						},
-						"folderPath": "watermark",
-						"container": "con1"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
-			]
 		}
 	]
 }

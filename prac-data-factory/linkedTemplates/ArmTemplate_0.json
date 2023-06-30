@@ -259,6 +259,41 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/watermark_dataset_csv_op')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage_linkedServ",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Incremental_Load_datasets/Incremental_Copy2_watermark_datasets"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@utcnow()",
+							"type": "Expression"
+						},
+						"folderPath": "watermark",
+						"container": "con1"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/AzureSqlServer_linkedServ')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -308,41 +343,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/integrationRuntimes/integrationRuntime-selfHosted')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/watermark_dataset_csv_op')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "AzureBlobStorage_linkedServ",
-					"type": "LinkedServiceReference"
-				},
-				"folder": {
-					"name": "Incremental_Load_datasets/Incremental_Copy2_watermark_datasets"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"fileName": {
-							"value": "@utcnow()",
-							"type": "Expression"
-						},
-						"folderPath": "watermark",
-						"container": "con1"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
 			]
 		},
 		{
