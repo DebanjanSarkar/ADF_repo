@@ -1,0 +1,70 @@
+{
+	"name": "Incremental_Copy3_optimised",
+	"properties": {
+		"description": "This is the practical implementation of incremental load using lookup table.",
+		"activities": [
+			{
+				"name": "Lookup_LookupTable",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "SqlServerSource",
+						"sqlReaderQuery": "SELECT * FROM LookupTable;",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "incremen_cpy_optimised_sqlserverTbl_dataset",
+						"type": "DatasetReference",
+						"parameters": {
+							"dbName_dataset": "sample6",
+							"schemaName_dataset": "dbo",
+							"tableName_dataset": "Employee"
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEach1",
+				"description": "This will loop through all the entries present in the Lookup Table dataset.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Lookup_LookupTable",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Lookup_LookupTable').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true
+				}
+			}
+		],
+		"parameters": {
+			"dbName": {
+				"type": "string",
+				"defaultValue": "sample6"
+			}
+		},
+		"folder": {
+			"name": "Incremental_Load"
+		},
+		"annotations": []
+	}
+}

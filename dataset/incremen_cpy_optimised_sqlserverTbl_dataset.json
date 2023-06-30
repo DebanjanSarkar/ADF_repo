@@ -1,0 +1,45 @@
+{
+	"name": "incremen_cpy_optimised_sqlserverTbl_dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SqlServer_local_linkedService",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"linkedServicedbName": {
+					"value": "@dataset().dbName_dataset",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"dbName_dataset": {
+				"type": "string",
+				"defaultValue": "sample6"
+			},
+			"schemaName_dataset": {
+				"type": "string",
+				"defaultValue": "dbo"
+			},
+			"tableName_dataset": {
+				"type": "string",
+				"defaultValue": "Employee"
+			}
+		},
+		"folder": {
+			"name": "Incremental_Load_datasets/Incremental_Copy3_optimised_pipeline_datasets"
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().schemaName_dataset",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().tableName_dataset",
+				"type": "Expression"
+			}
+		}
+	}
+}
