@@ -383,6 +383,34 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/on_prem_dataset_op')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage_linkedServ",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "onprem_to_ADLS_dir"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "onprem_csv_to_parquet",
+						"container": "con1"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorage_linkedServ')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Incremental_Copy1')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -753,55 +781,6 @@
 				"typeProperties": {
 					"schema": "dbo",
 					"table": "tblProducts"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/watermark_dataset_tbl')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "SqlServer_local_linkedService",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"linkedServicedbName": {
-							"value": "@dataset().dbName_inDataset",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"schemaName_inDataset": {
-						"type": "string",
-						"defaultValue": "increment"
-					},
-					"tableName_inDataset": {
-						"type": "string"
-					},
-					"dbName_inDataset": {
-						"type": "string",
-						"defaultValue": "azureDB"
-					}
-				},
-				"folder": {
-					"name": "Incremental_Load_datasets/Incremental_Copy2_watermark_datasets"
-				},
-				"annotations": [],
-				"type": "SqlServerTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().schemaName_inDataset",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().tableName_inDataset",
-						"type": "Expression"
-					}
 				}
 			},
 			"dependsOn": [

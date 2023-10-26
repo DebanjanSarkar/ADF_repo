@@ -21,6 +21,53 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/watermark_dataset_tbl')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SqlServer_local_linkedService",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"linkedServicedbName": {
+							"value": "@dataset().dbName_inDataset",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"schemaName_inDataset": {
+						"type": "string",
+						"defaultValue": "increment"
+					},
+					"tableName_inDataset": {
+						"type": "string"
+					},
+					"dbName_inDataset": {
+						"type": "string",
+						"defaultValue": "azureDB"
+					}
+				},
+				"folder": {
+					"name": "Incremental_Load_datasets/Incremental_Copy2_watermark_datasets"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().schemaName_inDataset",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().tableName_inDataset",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/stegno_csv_dataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -852,7 +899,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/watermark_dataset_tbl')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/Incremental_Copy3_optimised')]",
@@ -1075,6 +1124,85 @@
 				}
 			},
 			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/csv_to_parquet')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This pipeline copies CSV datafiles from my on prem PC, to ADLS gen2 in parquet format.",
+				"activities": [
+					{
+						"name": "Copy data from HDD to ADLS",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "FileServerReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings",
+									"copyBehavior": "PreserveHierarchy"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "stegno_csv_dataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "on_prem_dataset_op",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "onprem_to_ADLS"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/stegno_csv_dataset')]"
+			]
 		}
 	]
 }
