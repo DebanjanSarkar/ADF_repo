@@ -1,0 +1,47 @@
+{
+	"name": "stegno_csv_dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "FileServer_my_pc_linked_serv",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "onprem_to_ADLS_dir"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "FileServerLocation",
+				"fileName": "1800_temperature.csv"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": false,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"type": "String"
+			},
+			{
+				"type": "String"
+			},
+			{
+				"type": "String"
+			},
+			{
+				"type": "String"
+			},
+			{
+				"type": "String"
+			},
+			{
+				"type": "String"
+			},
+			{
+				"type": "String"
+			}
+		]
+	}
+}
