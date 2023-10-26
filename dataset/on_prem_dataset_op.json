@@ -1,0 +1,23 @@
+{
+	"name": "on_prem_dataset_op",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorage_linkedServ",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "onprem_to_ADLS_dir"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "onprem_csv_to_parquet",
+				"container": "con1"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}
