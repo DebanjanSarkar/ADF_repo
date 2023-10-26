@@ -21,6 +21,311 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('factoryName'), '/stegno_csv_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "FileServer_my_pc_linked_serv",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "onprem_to_ADLS_dir"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "FileServerLocation",
+						"fileName": "1800_temperature.csv"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/1-copy_data_pipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data to CSV format",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ip_dataset_sqlserver",
+								"type": "DatasetReference",
+								"parameters": {
+									"dbNameDataset": {
+										"value": "@pipeline().parameters.dbNamePipeline",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "op_dataset_csv",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderName_inCSVOutputDataset": {
+										"value": "@pipeline().parameters.CSVFolderName",
+										"type": "Expression"
+									},
+									"fileName_inCSVOutputDataset": {
+										"value": "@pipeline().parameters.CSVFileName",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Copy data to AVRO format",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Copy data to CSV format",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "AvroSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "AvroWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ip_dataset_sqlserver",
+								"type": "DatasetReference",
+								"parameters": {
+									"dbNameDataset": {
+										"value": "@pipeline().parameters.dbNamePipeline",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "op_dataset_avro",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderName_AvroOpDataset": {
+										"value": "@pipeline().parameters.AvroFolderName",
+										"type": "Expression"
+									},
+									"fileName_AvroOpDataset": {
+										"value": "@pipeline().parameters.AvroFileName",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "Copy data to Parquet format",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Copy data to AVRO format",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"sink": {
+								"type": "ParquetSink",
+								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "ParquetWriteSettings"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "ip_dataset_sqlserver",
+								"type": "DatasetReference",
+								"parameters": {
+									"dbNameDataset": {
+										"value": "@pipeline().parameters.dbNamePipeline",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "op_dataset_parquet",
+								"type": "DatasetReference",
+								"parameters": {
+									"folderName_parquetOpDataset": {
+										"value": "@pipeline().parameters.ParquestFolderName",
+										"type": "Expression"
+									},
+									"fileName_parquetOpDataset": {
+										"value": "@pipeline().parameters.ParquestFileName",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"dbNamePipeline": {
+						"type": "string"
+					},
+					"CSVFolderName": {
+						"type": "string"
+					},
+					"CSVFileName": {
+						"type": "string"
+					},
+					"AvroFolderName": {
+						"type": "string"
+					},
+					"AvroFileName": {
+						"type": "string"
+					},
+					"ParquestFolderName": {
+						"type": "string"
+					},
+					"ParquestFileName": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "ADF100"
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-06-23T09:56:34Z"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/1-load_data_from_localserver_to_azureDB_pipeline')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -105,8 +410,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"fromDB": {
@@ -283,8 +587,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"fromDatabase": {
@@ -524,8 +827,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"dbName": {
@@ -549,44 +851,6 @@
 					"name": "Incremental_Load"
 				},
 				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Trigger_Incremental_Copy1')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Stopped",
-				"pipelines": [
-					{
-						"pipelineReference": {
-							"referenceName": "Incremental_Copy1",
-							"type": "PipelineReference"
-						},
-						"parameters": {
-							"windowStart": {
-								"type": "Expression",
-								"value": "[parameters('Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowStart')]"
-							},
-							"windowEnd": {
-								"type": "Expression",
-								"value": "[parameters('Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowEnd')]"
-							}
-						}
-					}
-				],
-				"type": "ScheduleTrigger",
-				"typeProperties": {
-					"recurrence": {
-						"frequency": "Minute",
-						"interval": 1,
-						"startTime": "2023-06-29T16:11:00Z",
-						"endTime": "2023-06-30T16:11:00Z",
-						"timeZone": "UTC"
-					}
-				}
 			},
 			"dependsOn": []
 		},
@@ -759,8 +1023,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"dbName": {
@@ -772,6 +1035,44 @@
 					"name": "Incremental_Load"
 				},
 				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Trigger_Incremental_Copy1')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "Incremental_Copy1",
+							"type": "PipelineReference"
+						},
+						"parameters": {
+							"windowStart": {
+								"type": "Expression",
+								"value": "[parameters('Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowStart')]"
+							},
+							"windowEnd": {
+								"type": "Expression",
+								"value": "[parameters('Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowEnd')]"
+							}
+						}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 1,
+						"startTime": "2023-06-29T16:11:00Z",
+						"endTime": "2023-06-30T16:11:00Z",
+						"timeZone": "UTC"
+					}
+				}
 			},
 			"dependsOn": []
 		}

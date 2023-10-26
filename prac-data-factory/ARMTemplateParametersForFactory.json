@@ -14,11 +14,20 @@
 		"SqlServer_local_linkedService_connectionString": {
 			"value": ""
 		},
+		"FileServer_my_pc_linked_serv_password": {
+			"value": ""
+		},
 		"Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowStart": {
 			"value": "@{addminutes(trigger().scheduledTime, -1)}"
 		},
 		"Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowEnd": {
 			"value": "@trigger().scheduledTime"
+		},
+		"FileServer_my_pc_linked_serv_properties_typeProperties_host": {
+			"value": "E:\\stegno"
+		},
+		"FileServer_my_pc_linked_serv_properties_typeProperties_userId": {
+			"value": "Debanjan Sarkar"
 		}
 	}
 }

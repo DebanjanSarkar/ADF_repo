@@ -18,6 +18,18 @@
 		"SqlServer_local_linkedService_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'SqlServer_local_linkedService'"
+		},
+		"FileServer_my_pc_linked_serv_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'FileServer_my_pc_linked_serv'"
+		},
+		"FileServer_my_pc_linked_serv_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "E:\\stegno"
+		},
+		"FileServer_my_pc_linked_serv_properties_typeProperties_userId": {
+			"type": "string",
+			"defaultValue": "Debanjan Sarkar"
 		}
 	},
 	"variables": {
@@ -346,6 +358,31 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/FileServer_my_pc_linked_serv')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This linked service connects to my personal laptop file system's E drive.",
+				"annotations": [],
+				"type": "FileServer",
+				"typeProperties": {
+					"host": "[parameters('FileServer_my_pc_linked_serv_properties_typeProperties_host')]",
+					"userId": "[parameters('FileServer_my_pc_linked_serv_properties_typeProperties_userId')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('FileServer_my_pc_linked_serv_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "integrationRuntime-selfHosted",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/integrationRuntimes/integrationRuntime-selfHosted')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/Incremental_Copy1')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -421,8 +458,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"windowStart": {
@@ -485,8 +521,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"folder": {
 					"name": "new_task_pipeline_folder"
@@ -640,6 +675,56 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/incremen_cpy_optimised_sqlserverTbl_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SqlServer_local_linkedService",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"linkedServicedbName": {
+							"value": "@dataset().dbName_dataset",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"dbName_dataset": {
+						"type": "string",
+						"defaultValue": "sample6"
+					},
+					"schemaName_dataset": {
+						"type": "string",
+						"defaultValue": "dbo"
+					},
+					"tableName_dataset": {
+						"type": "string",
+						"defaultValue": "Employee"
+					}
+				},
+				"folder": {
+					"name": "Incremental_Load_datasets/Incremental_Copy3_optimised_pipeline_datasets"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().schemaName_dataset",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().tableName_dataset",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ip_dataset_sqlserver')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -721,317 +806,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/incremen_cpy_optimised_sqlserverTbl_dataset')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "SqlServer_local_linkedService",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"linkedServicedbName": {
-							"value": "@dataset().dbName_dataset",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"dbName_dataset": {
-						"type": "string",
-						"defaultValue": "sample6"
-					},
-					"schemaName_dataset": {
-						"type": "string",
-						"defaultValue": "dbo"
-					},
-					"tableName_dataset": {
-						"type": "string",
-						"defaultValue": "Employee"
-					}
-				},
-				"folder": {
-					"name": "Incremental_Load_datasets/Incremental_Copy3_optimised_pipeline_datasets"
-				},
-				"annotations": [],
-				"type": "SqlServerTable",
-				"schema": [],
-				"typeProperties": {
-					"schema": {
-						"value": "@dataset().schemaName_dataset",
-						"type": "Expression"
-					},
-					"table": {
-						"value": "@dataset().tableName_dataset",
-						"type": "Expression"
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/1-copy_data_pipeline')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Copy data to CSV format",
-						"type": "Copy",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "DelimitedTextSink",
-								"storeSettings": {
-									"type": "AzureBlobStorageWriteSettings"
-								},
-								"formatSettings": {
-									"type": "DelimitedTextWriteSettings",
-									"quoteAllText": true,
-									"fileExtension": ".txt"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "ip_dataset_sqlserver",
-								"type": "DatasetReference",
-								"parameters": {
-									"dbNameDataset": {
-										"value": "@pipeline().parameters.dbNamePipeline",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "op_dataset_csv",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderName_inCSVOutputDataset": {
-										"value": "@pipeline().parameters.CSVFolderName",
-										"type": "Expression"
-									},
-									"fileName_inCSVOutputDataset": {
-										"value": "@pipeline().parameters.CSVFileName",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "Copy data to AVRO format",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "Copy data to CSV format",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "AvroSink",
-								"storeSettings": {
-									"type": "AzureBlobStorageWriteSettings"
-								},
-								"formatSettings": {
-									"type": "AvroWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "ip_dataset_sqlserver",
-								"type": "DatasetReference",
-								"parameters": {
-									"dbNameDataset": {
-										"value": "@pipeline().parameters.dbNamePipeline",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "op_dataset_avro",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderName_AvroOpDataset": {
-										"value": "@pipeline().parameters.AvroFolderName",
-										"type": "Expression"
-									},
-									"fileName_AvroOpDataset": {
-										"value": "@pipeline().parameters.AvroFileName",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					},
-					{
-						"name": "Copy data to Parquet format",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "Copy data to AVRO format",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobStorageWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "ip_dataset_sqlserver",
-								"type": "DatasetReference",
-								"parameters": {
-									"dbNameDataset": {
-										"value": "@pipeline().parameters.dbNamePipeline",
-										"type": "Expression"
-									}
-								}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "op_dataset_parquet",
-								"type": "DatasetReference",
-								"parameters": {
-									"folderName_parquetOpDataset": {
-										"value": "@pipeline().parameters.ParquestFolderName",
-										"type": "Expression"
-									},
-									"fileName_parquetOpDataset": {
-										"value": "@pipeline().parameters.ParquestFileName",
-										"type": "Expression"
-									}
-								}
-							}
-						]
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"parameters": {
-					"dbNamePipeline": {
-						"type": "string"
-					},
-					"CSVFolderName": {
-						"type": "string"
-					},
-					"CSVFileName": {
-						"type": "string"
-					},
-					"AvroFolderName": {
-						"type": "string"
-					},
-					"AvroFileName": {
-						"type": "string"
-					},
-					"ParquestFolderName": {
-						"type": "string"
-					},
-					"ParquestFileName": {
-						"type": "string"
-					}
-				},
-				"folder": {
-					"name": "ADF100"
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-06-23T09:56:34Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ip_dataset_sqlserver')]",
-				"[concat(variables('factoryId'), '/datasets/op_dataset_csv')]",
-				"[concat(variables('factoryId'), '/datasets/op_dataset_avro')]",
-				"[concat(variables('factoryId'), '/datasets/op_dataset_parquet')]"
 			]
 		}
 	]

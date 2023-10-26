@@ -19,6 +19,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'SqlServer_local_linkedService'"
 		},
+		"FileServer_my_pc_linked_serv_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'FileServer_my_pc_linked_serv'"
+		},
 		"Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowStart": {
 			"type": "string",
 			"defaultValue": "@{addminutes(trigger().scheduledTime, -1)}"
@@ -26,6 +30,14 @@
 		"Trigger_Incremental_Copy1_properties_Incremental_Copy1_parameters_windowEnd": {
 			"type": "string",
 			"defaultValue": "@trigger().scheduledTime"
+		},
+		"FileServer_my_pc_linked_serv_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "E:\\stegno"
+		},
+		"FileServer_my_pc_linked_serv_properties_typeProperties_userId": {
+			"type": "string",
+			"defaultValue": "Debanjan Sarkar"
 		}
 	},
 	"variables": {
@@ -254,8 +266,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"dbNamePipeline": {
@@ -378,8 +389,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"fromDB": {
@@ -559,8 +569,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"fromDatabase": {
@@ -657,8 +666,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"windowStart": {
@@ -899,8 +907,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"parameters": {
 					"dbName": {
@@ -928,6 +935,193 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/watermark_dataset_tbl')]",
 				"[concat(variables('factoryId'), '/datasets/watermark_dataset_csv_op')]",
+				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Incremental_Copy3_optimised')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "This is the practical implementation of incremental load using lookup table.",
+				"activities": [
+					{
+						"name": "Lookup_LookupTable",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "SqlServerSource",
+								"sqlReaderQuery": "SELECT * FROM LookupTable;",
+								"queryTimeout": "02:00:00",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "incremen_cpy_optimised_sqlserverTbl_dataset",
+								"type": "DatasetReference",
+								"parameters": {
+									"dbName_dataset": "sample6",
+									"schemaName_dataset": "dbo",
+									"tableName_dataset": "Employee"
+								}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEach1",
+						"description": "This will loop through all the entries present in the Lookup Table dataset.",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup_LookupTable",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup_LookupTable').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy data1",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlServerSource",
+											"sqlReaderQuery": {
+												"value": "SELECT * FROM @{item().Source_tbl_name}\nWHERE @{item().Datecolumn_name} > '@{item().Lastmodified_date}';",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "SqlServerSink",
+											"writeBehavior": "insert",
+											"sqlWriterUseTableLock": false,
+											"tableOption": "autoCreate"
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "incremen_cpy_optimised_sqlserverTbl_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"dbName_dataset": "sample6",
+												"schemaName_dataset": "dbo",
+												"tableName_dataset": "Employee"
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "incremen_cpy_optimised_sqlserverTbl_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"dbName_dataset": "sample6",
+												"schemaName_dataset": "dbo",
+												"tableName_dataset": {
+													"value": "@item().Destination_tbl_name",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "SP_updateLookupTable",
+									"type": "SqlServerStoredProcedure",
+									"dependsOn": [
+										{
+											"activity": "Copy data1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"storedProcedureName": "[[dbo].[spUpdateLookupTable]",
+										"storedProcedureParameters": {
+											"tableName": {
+												"value": {
+													"value": "@item().Destination_tbl_name",
+													"type": "Expression"
+												},
+												"type": "String"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "SqlServer_local_linkedService",
+										"type": "LinkedServiceReference",
+										"parameters": {
+											"linkedServicedbName": {
+												"value": "@pipeline().parameters.dbName",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"dbName": {
+						"type": "string",
+						"defaultValue": "sample6"
+					}
+				},
+				"folder": {
+					"name": "Incremental_Load"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/incremen_cpy_optimised_sqlserverTbl_dataset')]",
 				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
 			]
 		},
@@ -974,8 +1168,7 @@
 					}
 				],
 				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
+					"elapsedTimeMetric": {}
 				},
 				"folder": {
 					"name": "new_task_pipeline_folder"
@@ -1199,6 +1392,56 @@
 					},
 					"table": {
 						"value": "@dataset().tableName_ofDataset",
+						"type": "Expression"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/incremen_cpy_optimised_sqlserverTbl_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "SqlServer_local_linkedService",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"linkedServicedbName": {
+							"value": "@dataset().dbName_dataset",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"dbName_dataset": {
+						"type": "string",
+						"defaultValue": "sample6"
+					},
+					"schemaName_dataset": {
+						"type": "string",
+						"defaultValue": "dbo"
+					},
+					"tableName_dataset": {
+						"type": "string",
+						"defaultValue": "Employee"
+					}
+				},
+				"folder": {
+					"name": "Incremental_Load_datasets/Incremental_Copy3_optimised_pipeline_datasets"
+				},
+				"annotations": [],
+				"type": "SqlServerTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": {
+						"value": "@dataset().schemaName_dataset",
+						"type": "Expression"
+					},
+					"table": {
+						"value": "@dataset().tableName_dataset",
 						"type": "Expression"
 					}
 				}
@@ -1574,241 +1817,80 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Incremental_Copy3_optimised')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
+			"name": "[concat(parameters('factoryName'), '/FileServer_my_pc_linked_serv')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "This is the practical implementation of incremental load using lookup table.",
-				"activities": [
-					{
-						"name": "Lookup_LookupTable",
-						"type": "Lookup",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "SqlServerSource",
-								"sqlReaderQuery": "SELECT * FROM LookupTable;",
-								"queryTimeout": "02:00:00",
-								"partitionOption": "None"
-							},
-							"dataset": {
-								"referenceName": "incremen_cpy_optimised_sqlserverTbl_dataset",
-								"type": "DatasetReference",
-								"parameters": {
-									"dbName_dataset": "sample6",
-									"schemaName_dataset": "dbo",
-									"tableName_dataset": "Employee"
-								}
-							},
-							"firstRowOnly": false
-						}
-					},
-					{
-						"name": "ForEach1",
-						"description": "This will loop through all the entries present in the Lookup Table dataset.",
-						"type": "ForEach",
-						"dependsOn": [
-							{
-								"activity": "Lookup_LookupTable",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"items": {
-								"value": "@activity('Lookup_LookupTable').output.value",
-								"type": "Expression"
-							},
-							"isSequential": true,
-							"activities": [
-								{
-									"name": "Copy data1",
-									"type": "Copy",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"source": {
-											"type": "SqlServerSource",
-											"sqlReaderQuery": {
-												"value": "SELECT * FROM @{item().Source_tbl_name}\nWHERE @{item().Datecolumn_name} > '@{item().Lastmodified_date}';",
-												"type": "Expression"
-											},
-											"queryTimeout": "02:00:00",
-											"partitionOption": "None"
-										},
-										"sink": {
-											"type": "SqlServerSink",
-											"writeBehavior": "insert",
-											"sqlWriterUseTableLock": false,
-											"tableOption": "autoCreate"
-										},
-										"enableStaging": false,
-										"translator": {
-											"type": "TabularTranslator",
-											"typeConversion": true,
-											"typeConversionSettings": {
-												"allowDataTruncation": true,
-												"treatBooleanAsNumber": false
-											}
-										}
-									},
-									"inputs": [
-										{
-											"referenceName": "incremen_cpy_optimised_sqlserverTbl_dataset",
-											"type": "DatasetReference",
-											"parameters": {
-												"dbName_dataset": "sample6",
-												"schemaName_dataset": "dbo",
-												"tableName_dataset": "Employee"
-											}
-										}
-									],
-									"outputs": [
-										{
-											"referenceName": "incremen_cpy_optimised_sqlserverTbl_dataset",
-											"type": "DatasetReference",
-											"parameters": {
-												"dbName_dataset": "sample6",
-												"schemaName_dataset": "dbo",
-												"tableName_dataset": {
-													"value": "@item().Destination_tbl_name",
-													"type": "Expression"
-												}
-											}
-										}
-									]
-								},
-								{
-									"name": "SP_updateLookupTable",
-									"type": "SqlServerStoredProcedure",
-									"dependsOn": [
-										{
-											"activity": "Copy data1",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 0,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"typeProperties": {
-										"storedProcedureName": "[[dbo].[spUpdateLookupTable]",
-										"storedProcedureParameters": {
-											"tableName": {
-												"value": {
-													"value": "@item().Destination_tbl_name",
-													"type": "Expression"
-												},
-												"type": "String"
-											}
-										}
-									},
-									"linkedServiceName": {
-										"referenceName": "SqlServer_local_linkedService",
-										"type": "LinkedServiceReference",
-										"parameters": {
-											"linkedServicedbName": {
-												"value": "@pipeline().parameters.dbName",
-												"type": "Expression"
-											}
-										}
-									}
-								}
-							]
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"parameters": {
-					"dbName": {
-						"type": "string",
-						"defaultValue": "sample6"
+				"description": "This linked service connects to my personal laptop file system's E drive.",
+				"annotations": [],
+				"type": "FileServer",
+				"typeProperties": {
+					"host": "[parameters('FileServer_my_pc_linked_serv_properties_typeProperties_host')]",
+					"userId": "[parameters('FileServer_my_pc_linked_serv_properties_typeProperties_userId')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('FileServer_my_pc_linked_serv_password')]"
 					}
 				},
-				"folder": {
-					"name": "Incremental_Load"
-				},
-				"annotations": []
+				"connectVia": {
+					"referenceName": "integrationRuntime-selfHosted",
+					"type": "IntegrationRuntimeReference"
+				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/incremen_cpy_optimised_sqlserverTbl_dataset')]",
-				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
+				"[concat(variables('factoryId'), '/integrationRuntimes/integrationRuntime-selfHosted')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/incremen_cpy_optimised_sqlserverTbl_dataset')]",
+			"name": "[concat(parameters('factoryName'), '/stegno_csv_dataset')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "SqlServer_local_linkedService",
-					"type": "LinkedServiceReference",
-					"parameters": {
-						"linkedServicedbName": {
-							"value": "@dataset().dbName_dataset",
-							"type": "Expression"
-						}
-					}
-				},
-				"parameters": {
-					"dbName_dataset": {
-						"type": "string",
-						"defaultValue": "sample6"
-					},
-					"schemaName_dataset": {
-						"type": "string",
-						"defaultValue": "dbo"
-					},
-					"tableName_dataset": {
-						"type": "string",
-						"defaultValue": "Employee"
-					}
+					"referenceName": "FileServer_my_pc_linked_serv",
+					"type": "LinkedServiceReference"
 				},
 				"folder": {
-					"name": "Incremental_Load_datasets/Incremental_Copy3_optimised_pipeline_datasets"
+					"name": "onprem_to_ADLS_dir"
 				},
 				"annotations": [],
-				"type": "SqlServerTable",
-				"schema": [],
+				"type": "DelimitedText",
 				"typeProperties": {
-					"schema": {
-						"value": "@dataset().schemaName_dataset",
-						"type": "Expression"
+					"location": {
+						"type": "FileServerLocation",
+						"fileName": "1800_temperature.csv"
 					},
-					"table": {
-						"value": "@dataset().tableName_dataset",
-						"type": "Expression"
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": false,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
 					}
-				}
+				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/SqlServer_local_linkedService')]"
+				"[concat(variables('factoryId'), '/linkedServices/FileServer_my_pc_linked_serv')]"
 			]
 		}
 	]
