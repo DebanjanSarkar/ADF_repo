@@ -1,0 +1,18 @@
+{
+	"name": "FileServer_my_pc_linked_serv",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "This linked service connects to my personal laptop file system's E drive.",
+		"annotations": [],
+		"type": "FileServer",
+		"typeProperties": {
+			"host": "E:\\stegno",
+			"userId": "Debanjan Sarkar",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJiMDAxN2QyYi01NzZiLTQ1NjgtYmQzZS0wNGIwMWUzNTE3MjAiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "integrationRuntime-selfHosted",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
